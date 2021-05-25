@@ -45,3 +45,5 @@ project/target/
 **/.idea/
 **/target/
 **/*.iml
+/.bsp/
+/src/main/resources/hdfs-location.txt
