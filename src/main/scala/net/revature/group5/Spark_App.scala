@@ -24,6 +24,10 @@ object Spark_App {
       .getOrCreate()
   }
 
+  def close(): Unit = {
+    spark.close()
+  }
+
   def initialize(): Unit = {
     loadCovidData()
     loadTimeSeriesFiles()
@@ -45,6 +49,27 @@ object Spark_App {
     topConfirmedCases.show(20)
   }
 
+  def statesGrowth(): Unit = {
+    dataFiles("confirmed_US").createOrReplaceTempView("confirmed_US")
+    val statesMonths = spark.sql("SELECT `Province_State`, SUM(`2/1/20`) AS Feb_2020, SUM(`3/1/20`) AS" +
+      " Mar_2020, SUM(`4/1/20`) AS Apr_2020, SUM(`5/1/20`) AS May_2020" +
+      ", SUM(`6/1/20`) AS Jun_2020 FROM confirmed_US GROUP BY `Province_State`")
+
+    spark.udf.register("growthPercentage", (first: Double, second: Double) => {
+      if (first == 0) {
+        0
+      } else {
+        ((second - first) / Math.abs(first)) * 100.0
+      }
+    }
+    )
+
+    statesMonths.createOrReplaceTempView("statesMonths")
+
+    val statesGrowth = spark.sql("SELECT `Province_State`, `Apr_2020`, `May_2020`, cast(growthPercentage(`Apr_2020`, `May_2020`) AS decimal(10,2)) as percent_growth FROM statesMonths")
+
+    statesGrowth.show()
+  }
 
 
   def loadCovidData(): Unit = {
@@ -93,14 +118,14 @@ object Spark_App {
       "recovered"
     )
 
-    (fileNames, keyNames).zipped.foreach( (fileName, keyName) => {
+    (fileNames, keyNames).zipped.foreach((fileName, keyName) => {
       dataFiles(keyName) = loadDataFile(fileName)
     })
 
-//    //Test
-//    dataFiles.foreach( pair => {
-//      println(pair)
-//    })
+    //    //Test
+    //    dataFiles.foreach( pair => {
+    //      println(pair)
+    //    })
   }
 
   def loadDataFile(fileName: String): DataFrame = {
