@@ -1,11 +1,15 @@
 package net.revature.group5
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql._
 import org.apache.spark.sql.types._
-
 import java.io.BufferedReader
 import scala.collection.mutable
 import scala.io.Source
+
+case class provState(Province_State: String, Apr_May20: Double, May_Jun20: Double, Jun_Jul20: Double,
+                     Jul_Aug20: Double, Aug_Sep20: Double, Sep_Oct20: Double, Oct_Nov20: Double,
+                     Nov_Dec20: Double, Dec_Jan21: Double, Jan_Feb21: Double, Feb_Mar21: Double,
+                     Mar_Apr21: Double, Apr_May21: Double)
 
 object Spark_App {
 
@@ -70,22 +74,33 @@ object Spark_App {
 
     statesMonths.createOrReplaceTempView("statesMonths")
 
-    val statesGrowth = spark.sql("SELECT `Province_State` AS states, cast(growthPercentage(`Apr_2020`, `May_2020`) AS decimal(10,2)) as growth_April_May, " +
-      "cast(growthPercentage(`May_2020`, `June_2020`) AS decimal(10,2)) as growth_May_June, " +
-      "cast(growthPercentage(`June_2020`, `July_2020`) AS decimal(10,2)) as growth_June_July, " +
-      "cast(growthPercentage(`July_2020`, `August_2020`) AS decimal(10,2)) as growth_July_August, " +
-      "cast(growthPercentage(`August_2020`, `September_2020`) AS decimal(10,2)) as growth_August_September, " +
-      "cast(growthPercentage(`September_2020`, `October_2020`) AS decimal(10,2)) as growth_September_October, " +
-      "cast(growthPercentage(`October_2020`, `November_2020`) AS decimal(10,2)) as growth_October_November, " +
-      "cast(growthPercentage(`November_2020`, `December_2020`) AS decimal(10,2)) as growth_November_December, " +
-      "cast(growthPercentage(`December_2020`, `January_2021`) AS decimal(10,2)) as growth_December_January, " +
-      "cast(growthPercentage(`January_2021`, `February_2021`) AS decimal(10,2)) as growth_January_February, " +
-      "cast(growthPercentage(`February_2021`, `March_2021`) AS decimal(10,2)) as growth_February_March, " +
-      "cast(growthPercentage(`March_2021`, `April_2021`) AS decimal(10,2)) as growth_March_April, " +
-      "cast(growthPercentage(`April_2021`, `May_2021`) AS decimal(10,2)) as growth_April_May " +
-      "FROM statesMonths ORDER BY states")
+    //cast(growthPercentage(`Apr_2020`, `May_2020`) AS decimal(10,2)) as Apr_May20
+    // this is what we did before: cannot up cast from decimal to double
+    val statesGrowth = spark.sql("SELECT `Province_State`, " +
+      "growthPercentage(`Apr_2020`, `May_2020`) as Apr_May20, " +
+      "growthPercentage(`May_2020`, `June_2020`) as May_Jun20, " +
+      "growthPercentage(`June_2020`, `July_2020`) as Jun_Jul20, " +
+      "growthPercentage(`July_2020`, `August_2020`) as Jul_Aug20, " +
+      "growthPercentage(`August_2020`, `September_2020`) as Aug_Sep20, " +
+      "growthPercentage(`September_2020`, `October_2020`) as Sep_Oct20, " +
+      "growthPercentage(`October_2020`, `November_2020`) as Oct_Nov20, " +
+      "growthPercentage(`November_2020`, `December_2020`) as Nov_Dec20, " +
+      "growthPercentage(`December_2020`, `January_2021`) as Dec_Jan21, " +
+      "growthPercentage(`January_2021`, `February_2021`) as Jan_Feb21, " +
+      "growthPercentage(`February_2021`, `March_2021`) as Feb_Mar21, " +
+      "growthPercentage(`March_2021`, `April_2021`) as Mar_Apr21, " +
+      "growthPercentage(`April_2021`, `May_2021`) as Apr_May21 " +
+      "FROM statesMonths ORDER BY Province_State")
 
-    statesGrowth.show()
+
+    import spark.implicits._
+    val ds = statesGrowth.as[provState]
+
+    ds.foreach(state => {
+      println(state.Province_State)
+    })
+
+
   }
 
 
