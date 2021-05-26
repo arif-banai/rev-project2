@@ -22,7 +22,7 @@ object Spark_App {
       .getOrCreate()
   }
 
-  def loadData(): Unit = {
+  def loadCovidData(): Unit = {
     val covid19dataSchema = StructType {
       Array(
         StructField("SNo", IntegerType),
@@ -45,6 +45,37 @@ object Spark_App {
       .option("nullValue", "")
       .schema(covid19dataSchema)
       .csv(hdfsLocation + "covid_19_data.csv")
+      .toDF()
+
+    userFile.show()
+
+    userFile.printSchema()
+  }
+
+  def loadTimeSeriesFiles(): Unit = {
+
+    val fileNames = Array(
+      "time_series_covid_19_confirmed.csv",
+      "time_series_covid_19_confirmed_US.csv",
+      "time_series_covid_19_deaths.csv",
+      "time_series_covid_19_deaths_US.csv",
+      "time_series_covid_19_recovered.csv"
+    )
+
+    fileNames.foreach(fileName => {
+      loadDataFile(fileName)
+    })
+  }
+
+  def loadDataFile(fileName: String): Unit = {
+
+    val userFile = spark.read
+      .option("header", "true")
+      .option("sep", ",")
+      .option("dateFormat", "MM/dd/yyyy")
+      .option("nullValue", "")
+      .option("inferSchema", "true")
+      .csv(hdfsLocation + fileName)
       .toDF()
 
     userFile.show()
