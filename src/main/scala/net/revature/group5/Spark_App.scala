@@ -116,9 +116,6 @@ object Spark_App {
     val growthRates: ArrayBuffer[mutable.Map[String, Double]] = new ArrayBuffer[mutable.Map[String, Double]]()
 
     fieldNames.foreach(field => {
-      println("------------------------------------")
-      println(s"Sorting on $field")
-
       val growthRatesByMonth = new mutable.HashMap[String, Double]()
 
       ds.sort( col(field).desc)
@@ -142,22 +139,60 @@ object Spark_App {
             case "Apr_May21" => growth = state.Apr_May21
           }
 
-          growthRatesByMonth.put(state.Province_State, growth)
+          addPairToMap(growthRatesByMonth, state.Province_State, growth)
+          growthRates.append(growthRatesByMonth)
         })
 
-      growthRates.append(growthRatesByMonth)
-      println("------------------------------------")
-    })
-
-    growthRates
-      .foreach(timePeriodMap => {
 
     })
 
+    growthRates.foreach(map => {
+      map.foreach(poop => {
+        println(poop)
+      })
+    })
 
+    var maxGrowth = 0d;
+    var minGrowth = Double.MaxValue
 
+    var maxState = ""
+    var minState = ""
 
+    for(i <- growthRates.indices) {
 
+      val timePeriodMap = growthRates(i)
+
+      timePeriodMap.foreach( growth => {
+
+        maxGrowth = 0d
+        minGrowth = Double.MaxValue
+
+        if(maxGrowth < growth._2) {
+          maxGrowth = growth._2
+          maxState = growth._1
+        }
+
+        if(minGrowth > growth._2) {
+          minGrowth = growth._2
+          minState = growth._1
+        }
+      })
+
+      val timePeriod = fieldNames(i)
+
+      println("---------------------------------")
+      println(s"Max growth rate of confirmed cases in the US for $timePeriod:")
+      println(s"State: $maxState \t Growth Rate: $maxGrowth")
+
+      println(s"Min growth rate of confirmed cases in the US for $timePeriod:")
+      println(s"State: $minState \t Growth Rate: $minGrowth")
+      println("---------------------------------")
+    }
+
+  }
+
+  def addPairToMap(map: mutable.HashMap[String, Double], stateName: String, growth: Double): Unit = {
+    map.put(stateName, growth)
   }
 
 
