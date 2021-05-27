@@ -153,32 +153,18 @@ object Spark_App {
 
     for(i <- growthRates.indices) {
 
-      val timePeriodMap = growthRates(i)
+      val mostGrowth: topNExtremes = new topNExtremes(true, 5)
+      val leastGrowth: topNExtremes = new topNExtremes(false, 5)
 
-      maxGrowth = 0d
-      minGrowth = Double.MaxValue
-
-      timePeriodMap.foreach( growth => {
-
-        if(maxGrowth < growth._2) {
-          maxGrowth = growth._2
-          maxState = growth._1
-        }
-
-        if(minGrowth > growth._2) {
-          minGrowth = growth._2
-          minState = growth._1
-        }
-      })
+      mostGrowth.findExtremes(growthRates(i))
+      leastGrowth.findExtremes(growthRates(i))
 
       val timePeriod = fieldNames(i)
 
       println("---------------------------------")
-      println(s"Max growth rate of confirmed cases in the US for $timePeriod:")
-      println(s"State: $maxState \t Growth Rate: $maxGrowth")
+      mostGrowth.printExtremes(timePeriod)
 
-      println(s"Min growth rate of confirmed cases in the US for $timePeriod:")
-      println(s"State: $minState \t Growth Rate: $minGrowth")
+      leastGrowth.printExtremes(timePeriod)
       println("---------------------------------")
     }
 
