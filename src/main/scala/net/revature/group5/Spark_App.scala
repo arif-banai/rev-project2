@@ -1,15 +1,13 @@
 package net.revature.group5
 
+import javafx.collections.transformation.SortedList
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
-
 import org.apache.spark.sql.functions.col
 
 import java.io.BufferedReader
 import scala.collection.mutable
-
 import scala.collection.mutable.ArrayBuffer
-
 import scala.io.Source
 import scala.language.dynamics
 
@@ -113,44 +111,39 @@ object Spark_App {
       "Mar_Apr21", "Apr_May21"
     )
 
-    val growthRates: ArrayBuffer[mutable.Map[String, Double]] = new ArrayBuffer[mutable.Map[String, Double]]()
+    val growthRates: Array[mutable.Map[String, Double]] = new Array[mutable.Map[String, Double]](13)
 
-    fieldNames.foreach(field => {
-      val growthRatesByMonth = new mutable.HashMap[String, Double]()
+    for(i <- growthRates.indices) {
+      growthRates(i) = new mutable.HashMap[String, Double]()
+    }
 
-      ds.sort( col(field).desc)
-        .foreach(state => {
+    val data = ds.collect();
 
-          var growth = 0d
+    for(state <- data) {
+      for(field <- fieldNames) {
+        var growth = 0d
+        var timePeriod = 0
 
-          field match {
-            case "Apr_May20" => growth = state.Apr_May20
-            case "May_Jun20" => growth = state.May_Jun20
-            case "Jun_Jul20" => growth = state.Jun_Jul20
-            case "Jul_Aug20" => growth = state.Jul_Aug20
-            case "Aug_Sep20" => growth = state.Aug_Sep20
-            case "Sep_Oct20" => growth = state.Sep_Oct20
-            case "Oct_Nov20" => growth = state.Oct_Nov20
-            case "Nov_Dec20" => growth = state.Nov_Dec20
-            case "Dec_Jan21" => growth = state.Dec_Jan21
-            case "Jan_Feb21" => growth = state.Jan_Feb21
-            case "Feb_Mar21" => growth = state.Feb_Mar21
-            case "Mar_Apr21" => growth = state.Mar_Apr21
-            case "Apr_May21" => growth = state.Apr_May21
-          }
+        field match {
+          case "Apr_May20" => {growth = state.Apr_May20; timePeriod = 0}
+          case "May_Jun20" => {growth = state.May_Jun20; timePeriod = 1}
+          case "Jun_Jul20" => {growth = state.Jun_Jul20; timePeriod = 2}
+          case "Jul_Aug20" => {growth = state.Jul_Aug20; timePeriod = 3}
+          case "Aug_Sep20" => {growth = state.Aug_Sep20; timePeriod = 4}
+          case "Sep_Oct20" => {growth = state.Sep_Oct20; timePeriod = 5}
+          case "Oct_Nov20" => {growth = state.Oct_Nov20; timePeriod = 6}
+          case "Nov_Dec20" => {growth = state.Nov_Dec20; timePeriod = 7}
+          case "Dec_Jan21" => {growth = state.Dec_Jan21; timePeriod = 8}
+          case "Jan_Feb21" => {growth = state.Jan_Feb21; timePeriod = 9}
+          case "Feb_Mar21" => {growth = state.Feb_Mar21; timePeriod = 10}
+          case "Mar_Apr21" => {growth = state.Mar_Apr21; timePeriod = 11}
+          case "Apr_May21" => {growth = state.Apr_May21; timePeriod = 12}
+        }
 
-          addPairToMap(growthRatesByMonth, state.Province_State, growth)
-          growthRates.append(growthRatesByMonth)
-        })
+        growthRates(timePeriod).put(state.Province_State, growth)
 
-
-    })
-
-    growthRates.foreach(map => {
-      map.foreach(poop => {
-        println(poop)
-      })
-    })
+      }
+    }
 
     var maxGrowth = 0d;
     var minGrowth = Double.MaxValue
@@ -162,10 +155,10 @@ object Spark_App {
 
       val timePeriodMap = growthRates(i)
 
-      timePeriodMap.foreach( growth => {
+      maxGrowth = 0d
+      minGrowth = Double.MaxValue
 
-        maxGrowth = 0d
-        minGrowth = Double.MaxValue
+      timePeriodMap.foreach( growth => {
 
         if(maxGrowth < growth._2) {
           maxGrowth = growth._2
