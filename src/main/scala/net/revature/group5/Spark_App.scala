@@ -2,9 +2,16 @@ package net.revature.group5
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
+
+import org.apache.spark.sql.functions.col
+
 import java.io.BufferedReader
 import scala.collection.mutable
+
+import scala.collection.mutable.ArrayBuffer
+
 import scala.io.Source
+import scala.language.dynamics
 
 case class provState(Province_State: String, Apr_May20: Double, May_Jun20: Double, Jun_Jul20: Double,
                      Jul_Aug20: Double, Aug_Sep20: Double, Sep_Oct20: Double, Oct_Nov20: Double,
@@ -17,7 +24,9 @@ object Spark_App {
   val hdfsLocation: String = br.readLine();
   br.close()
 
-  val dataFiles: mutable.Map[String, DataFrame] = scala.collection.mutable.Map[String, DataFrame]()
+  val dataFiles: mutable.Map[String, DataFrame] = mutable.Map[String, DataFrame]()
+
+
 
   val spark: SparkSession = {
     SparkSession
@@ -33,6 +42,7 @@ object Spark_App {
   }
 
   def initialize(): Unit = {
+    spark.sparkContext.setLogLevel("ERROR")
     loadCovidData()
     loadTimeSeriesFiles()
   }
@@ -96,9 +106,56 @@ object Spark_App {
     import spark.implicits._
     val ds = statesGrowth.as[provState]
 
-    ds.foreach(state => {
-      println(state.Province_State)
+    val fieldNames = Array(
+      "Apr_May20", "May_Jun20", "Jun_Jul20",
+      "Jul_Aug20", "Aug_Sep20", "Sep_Oct20", "Oct_Nov20",
+      "Nov_Dec20", "Dec_Jan21", "Jan_Feb21", "Feb_Mar21",
+      "Mar_Apr21", "Apr_May21"
+    )
+
+    val growthRates: ArrayBuffer[mutable.Map[String, Double]] = new ArrayBuffer[mutable.Map[String, Double]]()
+
+    fieldNames.foreach(field => {
+      println("------------------------------------")
+      println(s"Sorting on $field")
+
+      val growthRatesByMonth = new mutable.HashMap[String, Double]()
+
+      ds.sort( col(field).desc)
+        .foreach(state => {
+
+          var growth = 0d
+
+          field match {
+            case "Apr_May20" => growth = state.Apr_May20
+            case "May_Jun20" => growth = state.May_Jun20
+            case "Jun_Jul20" => growth = state.Jun_Jul20
+            case "Jul_Aug20" => growth = state.Jul_Aug20
+            case "Aug_Sep20" => growth = state.Aug_Sep20
+            case "Sep_Oct20" => growth = state.Sep_Oct20
+            case "Oct_Nov20" => growth = state.Oct_Nov20
+            case "Nov_Dec20" => growth = state.Nov_Dec20
+            case "Dec_Jan21" => growth = state.Dec_Jan21
+            case "Jan_Feb21" => growth = state.Jan_Feb21
+            case "Feb_Mar21" => growth = state.Feb_Mar21
+            case "Mar_Apr21" => growth = state.Mar_Apr21
+            case "Apr_May21" => growth = state.Apr_May21
+          }
+
+          growthRatesByMonth.put(state.Province_State, growth)
+        })
+
+      growthRates.append(growthRatesByMonth)
+      println("------------------------------------")
     })
+
+    growthRates
+      .foreach(timePeriodMap => {
+
+    })
+
+
+
 
 
   }
