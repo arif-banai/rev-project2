@@ -28,14 +28,17 @@ class topNExtremes(val storeMax: Boolean, val topN: Int) {
    */
   private def insert(newGrowth: (String, Double)): Unit = {
     var indexToReplace: Int = 0
-    for(i <- topNGrowths.indices) {
-      if(storeMax) {
+    val indices = Array.range(0, topNGrowths.length)
+    if(storeMax) {
+      for(i <- indices) {
         if (topNGrowths(i)._2 < topNGrowths(indexToReplace)._2) indexToReplace = i
-        if (newGrowth._2 < topNGrowths(indexToReplace)._2) return
-      } else {
-        if(topNGrowths(i)._2 > topNGrowths(indexToReplace)._2) indexToReplace = i
-        if (newGrowth._2 > topNGrowths(indexToReplace)._2) return
       }
+      if (newGrowth._2 < topNGrowths(indexToReplace)._2) return
+    } else {
+      for(i <- indices) {
+        if (topNGrowths(i)._2 > topNGrowths(indexToReplace)._2) indexToReplace = i
+      }
+      if (newGrowth._2 > topNGrowths(indexToReplace)._2) return
     }
 
     topNGrowths(indexToReplace) = newGrowth
@@ -57,7 +60,7 @@ class topNExtremes(val storeMax: Boolean, val topN: Int) {
     if(storeMax) println(s"Max growth rate of confirmed cases in the US for $timePeriod:")
     else println(s"Min growth rate of confirmed cases in the US for $timePeriod:")
     for(i <- topNGrowths.indices) {
-      println(s"State: ${topNGrowths(i)._1} \t Growth Rate: ${topNGrowths(i)._2}")
+      println(f"State: ${topNGrowths(i)._1}%-29s Growth Rate: ${topNGrowths(i)._2}%9.2f")
     }
 
     println()

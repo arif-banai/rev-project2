@@ -161,13 +161,12 @@ object Spark_App {
 
       val timePeriod = fieldNames(i)
 
-      println("---------------------------------")
+      println("-----------------------------------------------------------\n")
       mostGrowth.printExtremes(timePeriod)
 
       leastGrowth.printExtremes(timePeriod)
-      println("---------------------------------")
     }
-
+    println("-----------------------------------------------------------")
   }
 
   def addPairToMap(map: mutable.HashMap[String, Double], stateName: String, growth: Double): Unit = {
