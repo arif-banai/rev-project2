@@ -66,8 +66,8 @@ object Spark_App {
   def mostRecovered(): Unit = {
 
     dataFiles("recovered_edit").createOrReplaceTempView("recovered")
-    val topRecovered = spark.sql("SELECT `Country/Region`, sum(`5/2/2021`) AS recoveries " +
-      "FROM recovered GROUP BY `Country/Region` ORDER BY recoveredPeople DESC")
+    val topRecovered = spark.sql("SELECT `Country/Region` as country, sum(`5/2/21`) AS recoveries " +
+      "FROM recovered GROUP BY country ORDER BY recoveries DESC")
 
     topRecovered.show(20)
   }
