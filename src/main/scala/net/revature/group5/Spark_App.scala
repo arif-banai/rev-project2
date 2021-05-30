@@ -48,7 +48,8 @@ object Spark_App {
   def mostConfirmedCases(): Unit = {
 
     dataFiles("confirmed").createOrReplaceTempView("confirmed")
-    val topConfirmedCases = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS confirmedCases FROM confirmed GROUP BY country ORDER BY confirmedCases DESC")
+    val topConfirmedCases = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS confirmedCases " +
+      "FROM confirmed GROUP BY country ORDER BY confirmedCases DESC")
 
     topConfirmedCases.show(20)
   }
@@ -56,15 +57,17 @@ object Spark_App {
   def mostDeaths(): Unit = {
 
     dataFiles("deaths").createOrReplaceTempView("deaths")
-    val topDeaths = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS deadPeople FROM deaths GROUP BY country ORDER BY deadPeople DESC")
+    val topDeaths = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS deaths " +
+      "FROM deaths GROUP BY country ORDER BY deadPeople DESC")
 
     topDeaths.show(20)
   }
 
   def mostRecovered(): Unit = {
 
-    dataFiles("recovered").createOrReplaceTempView("recovered")
-    val topRecovered = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS recoveredPeople FROM recovered GROUP BY country ORDER BY recoveredPeople DESC")
+    dataFiles("recovered_edit").createOrReplaceTempView("recovered")
+    val topRecovered = spark.sql("SELECT `Country/Region`, sum(`5/2/2021`) AS recoveries " +
+      "FROM recovered GROUP BY `Country/Region` ORDER BY recoveredPeople DESC")
 
     topRecovered.show(20)
   }
@@ -179,17 +182,29 @@ object Spark_App {
 
   def topRatio(): Unit = {
     dataFiles("confirmed").createOrReplaceTempView("confirmed")
-    dataFiles("deaths").createOrReplaceTempView("deaths")
+    dataFiles("deaths").createOrReplaceTempView("deathsTable")
     dataFiles("recovered").createOrReplaceTempView("recovered")
+    spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS confirmedCases " +
+                      "FROM confirmed GROUP BY country ORDER BY confirmedCases DESC")
+      .createOrReplaceTempView("confirmed")
 
-    val topConfirmedDeathsAndRecovered = spark.sql("SELECT confirmed.`Country/Region` AS country, " +
-      "sum(confirmed.`5/2/21`) AS confirmedCases, " +
-      "sum(deaths.`5/2/21`) AS deadPeople, " +
-      "sum(recovered.`5/2/21`) AS recoveredPeople " +
+    spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS deaths " +
+                      "FROM deathsTable GROUP BY country ORDER BY deaths DESC")
+      .createOrReplaceTempView("deathsTable")
+
+    spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS recoveries " +
+                      "FROM recovered GROUP BY country ORDER BY recoveries DESC")
+      .createOrReplaceTempView("recovered")
+
+
+    val topConfirmedDeathsAndRecovered = spark.sql("SELECT confirmed.`country` AS country, " +
+      "confirmed.confirmedCases AS confirmedCases, " +
+      "deathsTable.deaths AS deaths, " +
+      "recovered.recoveries AS recoveredPeople " +
       "FROM confirmed " +
-      "JOIN deaths ON confirmed.`Country/Region` = deaths.`Country/Region` " +
-      "JOIN recovered ON confirmed.`Country/Region` = recovered.`Country/Region` " +
-      "GROUP BY confirmed.`Country/Region` ORDER BY confirmedCases DESC")
+      "JOIN deathsTable ON confirmed.`country` = deathsTable.`country` " +
+      "JOIN recovered ON confirmed.`country` = recovered.`country` " +
+      "ORDER BY confirmedCases DESC")
 
     topConfirmedDeathsAndRecovered.show(20)
   }
@@ -234,7 +249,8 @@ object Spark_App {
       "time_series_covid_19_confirmed_US.csv",
       "time_series_covid_19_deaths.csv",
       "time_series_covid_19_deaths_US.csv",
-      "time_series_covid_19_recovered.csv"
+      "time_series_covid_19_recovered.csv",
+      "time_series_covid_19_recovered_edit.csv"
     )
 
     val keyNames = Array(
@@ -242,7 +258,8 @@ object Spark_App {
       "confirmed_US",
       "deaths",
       "deaths_US",
-      "recovered"
+      "recovered",
+      "recovered_edit"
     )
 
     (fileNames, keyNames).zipped.foreach((fileName, keyName) => {
