@@ -6,6 +6,7 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions.col
 
 import java.io.BufferedReader
+import java.text.DecimalFormat
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -183,7 +184,7 @@ object Spark_App {
   def topRatio(): Unit = {
     dataFiles("confirmed").createOrReplaceTempView("confirmed")
     dataFiles("deaths").createOrReplaceTempView("deathsTable")
-    dataFiles("recovered").createOrReplaceTempView("recovered")
+    dataFiles("recovered_edit").createOrReplaceTempView("recovered")
     spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS confirmedCases " +
                       "FROM confirmed GROUP BY country ORDER BY confirmedCases DESC")
       .createOrReplaceTempView("confirmed")
@@ -204,9 +205,25 @@ object Spark_App {
       "FROM confirmed " +
       "JOIN deathsTable ON confirmed.`country` = deathsTable.`country` " +
       "JOIN recovered ON confirmed.`country` = recovered.`country` " +
-      "ORDER BY confirmedCases DESC")
+      "ORDER BY confirmedCases DESC").createOrReplaceTempView("joinedTable")
 
-    topConfirmedDeathsAndRecovered.show(20)
+    spark.udf.register("ratio", (numerator: Double, denominator: Double) => {
+      if (denominator == 0) {
+        "0"
+      } else {
+
+        f"${(numerator/denominator) * 100}%9.2f%%"
+
+        //new DecimalFormat("###.##").format()
+      }
+    })
+
+    val ratios = spark.sql("SELECT country, ratio(deaths, confirmedCases) AS `deaths/confirmed`, " +
+                "ratio(recoveredPeople, confirmedCases) AS `recovered/confirmed`, " +
+                "ratio(deaths, recoveredPeople) AS `deaths/recovered` " +
+                "FROM joinedTable ORDER BY `deaths/confirmed` DESC")
+
+    ratios.show(20)
   }
 
   def addPairToMap(map: mutable.HashMap[String, Double], stateName: String, growth: Double): Unit = {
