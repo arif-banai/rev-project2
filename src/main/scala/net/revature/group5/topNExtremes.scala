@@ -3,8 +3,8 @@ package net.revature.group5
 import scala.collection.mutable
 
 /**
- *
  * @param storeMax set true to find largest values; set false to find smallest values
+ * @param topN how many extremes you want to find
  */
 class topNExtremes(val storeMax: Boolean, val topN: Int) {
   val topNGrowths: Array[(String, Double)] = new Array[(String, Double)](topN)
@@ -23,7 +23,6 @@ class topNExtremes(val storeMax: Boolean, val topN: Int) {
   /**
    * insert, or don't insert, a new growth and state into the array
    *
-   * @param newState
    * @param newGrowth
    */
   private def insert(newGrowth: (String, Double)): Unit = {
@@ -56,11 +55,16 @@ class topNExtremes(val storeMax: Boolean, val topN: Int) {
     })
   }
 
+  /**
+   * prints the states and growth rates for a certain timePeriod
+   * @param timePeriod
+   */
   def printExtremes(timePeriod: String): Unit = {
     if(storeMax) println(s"Max growth rate of confirmed cases in the US for $timePeriod:")
     else println(s"Min growth rate of confirmed cases in the US for $timePeriod:")
+    val topNGrowthsSorted = topNGrowths.sortWith(_._2 > _._2)
     for(i <- topNGrowths.indices) {
-      println(f"State: ${topNGrowths(i)._1}%-29s Growth Rate: ${topNGrowths(i)._2}%9.2f")
+      println(f"State: ${topNGrowthsSorted(i)._1}%-29s Growth Rate: ${topNGrowthsSorted(i)._2}%9.2f")
     }
 
     println()
