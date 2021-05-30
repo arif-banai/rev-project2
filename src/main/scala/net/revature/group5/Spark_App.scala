@@ -48,7 +48,7 @@ object Spark_App {
   def mostConfirmedCases(): Unit = {
 
     dataFiles("confirmed").createOrReplaceTempView("confirmed")
-    val topConfirmedCases = spark.sql("SELECT `Country/Region` AS country, `5/2/21` AS confirmedCases FROM confirmed ORDER BY confirmedCases DESC")
+    val topConfirmedCases = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS confirmedCases FROM confirmed GROUP BY country ORDER BY confirmedCases DESC")
 
     topConfirmedCases.show(20)
   }
@@ -56,9 +56,17 @@ object Spark_App {
   def mostDeaths(): Unit = {
 
     dataFiles("deaths").createOrReplaceTempView("deaths")
-    val topConfirmedCases = spark.sql("SELECT `Country/Region` AS country, `5/2/21` AS deadPeople FROM deaths ORDER BY deadPeople DESC")
+    val topDeaths = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS deadPeople FROM deaths GROUP BY country ORDER BY deadPeople DESC")
 
-    topConfirmedCases.show(20)
+    topDeaths.show(20)
+  }
+
+  def mostRecovered(): Unit = {
+
+    dataFiles("recovered").createOrReplaceTempView("recovered")
+    val topRecovered = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS recoveredPeople FROM recovered GROUP BY country ORDER BY recoveredPeople DESC")
+
+    topRecovered.show(20)
   }
 
   def statesGrowth(): Unit = {
@@ -167,6 +175,23 @@ object Spark_App {
       leastGrowth.printExtremes(timePeriod)
     }
     println("-----------------------------------------------------------")
+  }
+
+  def topRatio(): Unit = {
+    dataFiles("confirmed").createOrReplaceTempView("confirmed")
+    dataFiles("deaths").createOrReplaceTempView("deaths")
+    dataFiles("recovered").createOrReplaceTempView("recovered")
+
+    val topConfirmedDeathsAndRecovered = spark.sql("SELECT confirmed.`Country/Region` AS country, " +
+      "sum(confirmed.`5/2/21`) AS confirmedCases, " +
+      "sum(deaths.`5/2/21`) AS deadPeople, " +
+      "sum(recovered.`5/2/21`) AS recoveredPeople " +
+      "FROM confirmed " +
+      "JOIN deaths ON confirmed.`Country/Region` = deaths.`Country/Region` " +
+      "JOIN recovered ON confirmed.`Country/Region` = recovered.`Country/Region` " +
+      "GROUP BY confirmed.`Country/Region` ORDER BY confirmedCases DESC")
+
+    topConfirmedDeathsAndRecovered.show(20)
   }
 
   def addPairToMap(map: mutable.HashMap[String, Double], stateName: String, growth: Double): Unit = {
