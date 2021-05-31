@@ -1,14 +1,10 @@
 package net.revature.group5
 
-import javafx.collections.transformation.SortedList
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions.col
 
 import java.io.BufferedReader
-import java.text.DecimalFormat
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 import scala.language.dynamics
 
