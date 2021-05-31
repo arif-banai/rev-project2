@@ -53,9 +53,9 @@ object Spark_App {
 
   def mostDeaths(): Unit = {
 
-    dataFiles("deaths").createOrReplaceTempView("deaths")
+    dataFiles("deaths").createOrReplaceTempView("deathsTable")
     val topDeaths = spark.sql("SELECT `Country/Region` AS country, sum(`5/2/21`) AS deaths " +
-      "FROM deaths GROUP BY country ORDER BY deadPeople DESC")
+      "FROM deathsTable GROUP BY country ORDER BY deaths DESC")
 
     topDeaths.show(20)
   }

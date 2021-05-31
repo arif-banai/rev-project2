@@ -64,7 +64,7 @@ class topNExtremes(val storeMax: Boolean, val topN: Int) {
     else println(s"Min growth rate of confirmed cases in the US for $timePeriod:")
     val topNGrowthsSorted = topNGrowths.sortWith(_._2 > _._2)
     for(i <- topNGrowths.indices) {
-      println(f"State: ${topNGrowthsSorted(i)._1}%-29s Growth Rate: ${topNGrowthsSorted(i)._2}%9.2f%%")
+      println(f"State: ${topNGrowthsSorted(i)._1}%-28s Growth Rate: ${topNGrowthsSorted(i)._2}%9.2f%%")
     }
 
     println()
